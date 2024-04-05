@@ -36,17 +36,17 @@ namespace Support.Progress
 
         public void ProgressReset(int nMin, int nMax, int nStartVal)
         {
-            ProgressReporter.ProgressReset(ProgressIndex, nMin, nMax, nStartVal);
+            if (ProgressReporter != null) ProgressReporter.ProgressReset(ProgressIndex, nMin, nMax, nStartVal);
         }
 
         public void AddIssue(string sIssue)
         {
-            ProgressReporter.AddIssue(sIssue);
+			if (ProgressReporter != null) ProgressReporter.AddIssue(sIssue);
         }
 
         public void ProgressStep()
         {
-            ProgressReporter.ProgressStep(ProgressIndex);
+			if (ProgressReporter != null) ProgressReporter.ProgressStep(ProgressIndex);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Support.Progress
         {
             if (ProxyOwnsReporter)
             {
-                ProgressReporter.Shutdown();
+				if (ProgressReporter != null) ProgressReporter.Shutdown();
             }
         }
     }

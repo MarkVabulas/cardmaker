@@ -23,10 +23,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using CardMaker.Card.FormattedText;
 using CardMaker.Card.Translation;
 using CardMaker.XML;
+using DocumentFormat.OpenXml.ExtendedProperties;
 using Support.IO;
 using Support.Progress;
 using Support.UI;
@@ -92,6 +94,34 @@ namespace CardMaker.Card
         }
 
         public DeckLine CurrentPrintLine => ValidLines[m_nCardPrintIndex];
+
+        public DeckLine ParentPrintLine = null;
+
+        public DeckLine GetFullPrintLine()
+        {
+            if (ParentPrintLine == null)
+                return CurrentPrintLine;
+
+			DeckLine Result = CurrentPrintLine;
+
+            /*
+			var keysAndValues = ParentPrintLine.LineColumns.Zip(ParentPrintLine.Reference.Entries, (k, v) => new { Key = k, Value = v });
+            foreach (var kv in keysAndValues)
+            {
+                if (Result.LineColumns.Contains(kv.Key))
+                {
+                    var nColumnIdx = Result.LineColumns.IndexOf(kv.Key);
+                    Result.Reference.Entries[nColumnIdx] = kv.Value;
+                }
+                else
+                {
+                    Result.LineColumns.Add(kv.Key);
+                    Result.Reference.Entries.Add(kv.Value);
+                }
+            }
+            */
+           return Result;
+		}
 
         public DeckLine CurrentLine => ValidLines[m_nCardIndex];
 
@@ -203,9 +233,9 @@ namespace CardMaker.Card
         {
             Translator.ResetMarkupCache(sElementName);
         }
-#endregion
+        #endregion
 
-#region Layout Set
+        #region Layout Set
         public void SetAndLoadLayout(ProjectLayout zLayout, bool bExporting, ProgressReporterProxy zReporterProxy)
         {
             EmptyReference = false;
@@ -256,7 +286,7 @@ namespace CardMaker.Card
 
         public string TranslateFileNameString(string sRawString, int nCardNumber, int nLeftPad)
         {
-            return FilenameTranslator.TranslateFileNameString(sRawString, nCardNumber, nLeftPad, CurrentPrintLine,
+            return FilenameTranslator.TranslateFileNameString(sRawString, nCardNumber, nLeftPad, GetFullPrintLine(),
                 Translator.DictionaryDefines, Translator.DictionaryColumnNameToIndex,
                 CardLayout);
         }

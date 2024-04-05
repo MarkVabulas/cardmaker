@@ -298,6 +298,26 @@ namespace CardMaker.Events.Managers
             return -1;
         }
 
+        /// <summary>
+        /// Returns the layout index based on the name of the layout
+        /// </summary>
+        /// <param name="zLayout"></param>
+        /// <returns>The index, or -1 if not found</returns>
+        public int GetLayoutIndex(string sLayoutName)
+        {
+            if (null != LoadedProject)
+            {
+                for (int nIdx = 0; nIdx < LoadedProject.Layout.Length; nIdx++)
+                {
+                    if (LoadedProject.Layout[nIdx].Name == sLayoutName)
+                    {
+                        return nIdx;
+                    }
+                }
+            }
+            return -1;
+        }
+
         private void InitializeLookups(bool bInitializeElementLookup = true)
         {
             m_zProjectLayoutDictionary.Clear();

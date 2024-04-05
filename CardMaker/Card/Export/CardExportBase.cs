@@ -46,7 +46,9 @@ namespace CardMaker.Card.Export
         
         public IProgressReporter ProgressReporter { get; set; }
 
-        protected CardExportBase(int nLayoutStartIndex, int nLayoutEndIndex) : this(Enumerable.Range(nLayoutStartIndex, nLayoutEndIndex - nLayoutStartIndex).ToArray())
+		public bool m_bDoReporting = true;
+
+		protected CardExportBase(int nLayoutStartIndex, int nLayoutEndIndex) : this(Enumerable.Range(nLayoutStartIndex, nLayoutEndIndex - nLayoutStartIndex).ToArray())
         {
         }
 
@@ -70,7 +72,7 @@ namespace CardMaker.Card.Export
             CurrentDeck.SetAndLoadLayout(zLayout ?? CurrentDeck.CardLayout, true, 
                 new ProgressReporterProxy()
                 {
-                    ProgressIndex = ProgressReporter.GetProgressIndex(ProgressName.REFERENCE_DATA),
+                    ProgressIndex = (m_bDoReporting) ? ProgressReporter.GetProgressIndex(ProgressName.REFERENCE_DATA) : 0,
                     ProgressReporter = ProgressReporter,
                     ProxyOwnsReporter = false
                 });
@@ -95,7 +97,7 @@ namespace CardMaker.Card.Export
                 nWidth != m_zExportCardBuffer.Width ||
                 nHeight != m_zExportCardBuffer.Height)
             {
-                m_zExportCardBuffer?.Dispose();
+				m_zExportCardBuffer?.Dispose();
                 m_zExportCardBuffer = new Bitmap(nWidth, nHeight);
             }
         }

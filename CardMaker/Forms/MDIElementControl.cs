@@ -681,7 +681,9 @@ namespace CardMaker.Forms
                         break;
                     case ElementType.Shape:
                         break;
-                }
+					case ElementType.SubLayout:
+						break;
+				}
             }
             else if (TranslatorType.JavaScript == ProjectManager.Instance.LoadedProjectTranslatorType)
             {
@@ -788,9 +790,12 @@ namespace CardMaker.Forms
                     numericLineSpace.Visible = true;
                     lblLineSpace.Visible = true;
                     break;
+				case ElementType.SubLayout:
+                    tabControl.SelectedTab = null;
+					break;
             }
 #else
-            tabControl.TabPages.Clear();
+			tabControl.TabPages.Clear();
             switch ((ElementType)comboElementType.SelectedIndex)
             {
                 case ElementType.Graphic:
@@ -817,7 +822,9 @@ namespace CardMaker.Forms
                     lblLineSpace.Visible = true;
                     checkJustifiedText.Visible = true;
                     break;
-            }
+				case ElementType.SubLayout:
+					break;
+			}
 #endif
             tabControl.Enabled = true;
             btnElementBrowseImage.Enabled = (comboElementType.SelectedIndex == (int)ElementType.Graphic);
@@ -1123,7 +1130,9 @@ namespace CardMaker.Forms
                         numericWordSpace.Visible = true;
                         checkJustifiedText.Visible = true;
                         break;
-                }
+					case ElementType.SubLayout:
+						break;
+				}
                 // this fires a change event on the combo box... seems like it might be wrong?
                 comboElementType.SelectedIndex = (int)eType;
                 UpdatePanelColors(zElement);

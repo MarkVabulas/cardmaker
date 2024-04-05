@@ -72,12 +72,12 @@ namespace CardMaker.Card
 
         public void DrawPrintLineToGraphics(Graphics zGraphics)
         {
-            DrawCard(0, 0, zGraphics, CurrentDeck.CurrentPrintLine, true, true);
+            DrawCard(0, 0, zGraphics, CurrentDeck.GetFullPrintLine(), true, true);
         }
 
         public void DrawPrintLineToGraphics(Graphics zGraphics, int nX, int nY, bool bDrawBackground)
         {
-            DrawCard(nX, nY, zGraphics, CurrentDeck.CurrentPrintLine, true, bDrawBackground);
+            DrawCard(nX, nY, zGraphics, CurrentDeck.GetFullPrintLine(), true, bDrawBackground);
         }
 
         public void DrawCard(int nX, int nY, Graphics zGraphics, DeckLine zDeckLine, bool bExport, bool bDrawBackground)

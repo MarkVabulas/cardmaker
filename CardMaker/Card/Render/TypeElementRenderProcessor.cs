@@ -62,7 +62,9 @@ namespace CardMaker.Card.Render
                 case ElementType.Shape:
                     m_zShapeRenderer.HandleShapeRender(zGraphics, sInput.ToLower(), zElement);
                     break;
-            }
+				case ElementType.SubLayout:
+					break;
+			}
             return sInput;
         }
     }
