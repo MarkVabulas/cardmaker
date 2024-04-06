@@ -170,18 +170,10 @@ namespace CardMaker.Card.Export
                             SubLayoutExporter.ExportThread();
                         }
 
-                        // This is an extra call to ChangeExportLayoutIndex since it switches what the active layout is during the previous ExecuteThread() for the SubLayout
+                        // We need to clear the image cache if we have a SubLayout
                         if (vSubLayoutArray.Count() > 0)
                         {
-                            ChangeExportLayoutIndex(nIdx);
-
-                            // We also need to reset everything associated with our own deck since it gets messed up in the SubLayout
-                            CurrentDeck.ResetDeckCache();
-                            
-                            // Need to update the CardPrintIndex back to the correct one for this Layout, since it was previously changed in the SubLayout
-                            CurrentDeck.CardPrintIndex = nCardId;
-
-							ImageCache.ClearImageCaches();
+                            ImageCache.ClearImageCaches();
                         }
 
                         nCardsExportedInImage++;
