@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -46,9 +47,9 @@ namespace CardMaker.Card.Export
         
         public IProgressReporter ProgressReporter { get; set; }
 
-		public bool m_bDoReporting = true;
+        public bool m_bDoReporting = true;
 
-		protected CardExportBase(int nLayoutStartIndex, int nLayoutEndIndex) : this(Enumerable.Range(nLayoutStartIndex, nLayoutEndIndex - nLayoutStartIndex).ToArray())
+        protected CardExportBase(int nLayoutStartIndex, int nLayoutEndIndex) : this(Enumerable.Range(nLayoutStartIndex, nLayoutEndIndex - nLayoutStartIndex).ToArray())
         {
         }
 
@@ -78,7 +79,7 @@ namespace CardMaker.Card.Export
                 });
         }
 
-        protected Deck CurrentDeck => CardRenderer.CurrentDeck;
+        public Deck CurrentDeck => CardRenderer.CurrentDeck;
 
         ~CardExportBase()
         {
@@ -97,7 +98,7 @@ namespace CardMaker.Card.Export
                 nWidth != m_zExportCardBuffer.Width ||
                 nHeight != m_zExportCardBuffer.Height)
             {
-				m_zExportCardBuffer?.Dispose();
+                m_zExportCardBuffer?.Dispose();
                 m_zExportCardBuffer = new Bitmap(nWidth, nHeight);
             }
         }
@@ -122,6 +123,34 @@ namespace CardMaker.Card.Export
                     zBuffer.RotateFlip(RotateFlipType.Rotate180FlipNone);
                     break;
             }
+        }
+        protected List<int> GetSubLayoutArray(int PrimaryLayoutIdx)
+        {
+            List<int> SubLayouts = new List<int>();
+
+            // Loop through the valid elements in this current layout to get a list of other layouts we need to generate first
+            for (var nIdx = 0; nIdx < CurrentDeck.CardLayout.Element.Length; nIdx++)
+            {
+                var zElement = CurrentDeck.CardLayout.Element[nIdx];
+                if (!zElement.enabled)
+                    continue;
+
+                // Check for the correct element type so we know it's a SubLayout request
+                if (zElement.type == ElementType.SubLayout.ToString())
+                {
+                    // Get the translated string from the current deck
+                    ElementString zElementString = CurrentDeck.TranslateString(zElement.variable, CurrentDeck.CurrentPrintLine, zElement, true);
+
+                    // Get the index of the referenced layout
+                    var nLayoutIdx = ProjectManager.Instance.GetLayoutIndex(zElementString.String);
+
+                    // Append the requested layout to the list of SubLayouts
+                    if (nLayoutIdx >= 0)
+                        SubLayouts.Add(nLayoutIdx);
+                }
+            }
+
+            return SubLayouts;
         }
 
         /// <summary>

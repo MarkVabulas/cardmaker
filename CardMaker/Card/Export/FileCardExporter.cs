@@ -66,35 +66,6 @@ namespace CardMaker.Card.Export
             m_eImageFormat = eImageFormat;
         }
 
-        private List<int> GetSubLayoutArray(int PrimaryLayoutIdx)
-        {
-            List<int> SubLayouts = new List<int>();
-
-            // Loop through the valid elements in this current layout to get a list of other layouts we need to generate first
-            for (var nIdx = 0; nIdx < CurrentDeck.CardLayout.Element.Length; nIdx++)
-            {
-                var zElement = CurrentDeck.CardLayout.Element[nIdx];
-                if (!zElement.enabled)
-                    continue;
-
-                // Check for the correct element type so we know it's a SubLayout request
-                if (zElement.type == ElementType.SubLayout.ToString())
-                {
-                    // Get the translated string from the current deck
-                    ElementString zElementString = CurrentDeck.TranslateString(zElement.variable, CurrentDeck.CurrentPrintLine, zElement, true);
-
-                    // Get the index of the referenced layout
-                    var nLayoutIdx = ProjectManager.Instance.GetLayoutIndex(zElementString.String);
-
-                    // Append the requested layout to the list of SubLayouts
-                    if (nLayoutIdx >= 0)
-                        SubLayouts.Add(nLayoutIdx);
-                }
-            }
-
-            return SubLayouts;
-        }
-
         public override void ExportThread()
         {
             var progressLayoutIdx = (m_bDoReporting) ? ProgressReporter.GetProgressIndex(ProgressName.LAYOUT) : 0;

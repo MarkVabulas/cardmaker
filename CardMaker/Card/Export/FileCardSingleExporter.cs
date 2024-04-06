@@ -23,9 +23,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using CardMaker.Data;
 using Support.UI;
 
@@ -55,13 +57,15 @@ namespace CardMaker.Card.Export
 
         public override void ExportThread()
         {
-            var progressLayoutIdx = ProgressReporter.GetProgressIndex(ProgressName.LAYOUT);
-            var progressCardIdx = ProgressReporter.GetProgressIndex(ProgressName.CARD);
+            var progressLayoutIdx = (m_bDoReporting) ? ProgressReporter.GetProgressIndex(ProgressName.LAYOUT) : 0;
+            var progressCardIdx = (m_bDoReporting) ? ProgressReporter.GetProgressIndex(ProgressName.CARD) : 0;
 
-            ProgressReporter.ProgressReset(progressLayoutIdx, 0, ExportLayoutIndices.Length, 0);
+            if (m_bDoReporting) ProgressReporter.ProgressReset(progressLayoutIdx, 0, ExportLayoutIndices.Length, 0);
             ChangeExportLayoutIndex(ExportLayoutIndices[0]);
             var nPadSize = CurrentDeck.CardCount.ToString(CultureInfo.InvariantCulture).Length;
-            ProgressReporter.ProgressReset(progressCardIdx, 0, CurrentDeck.CardCount, 0);
+            if (m_bDoReporting) ProgressReporter.ProgressReset(progressCardIdx, 0, CurrentDeck.CardCount, 0);
+
+            List<int> vSubLayoutArray = GetSubLayoutArray(ExportLayoutIndices[0]);
 
             UpdateBufferBitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
 
@@ -72,9 +76,27 @@ namespace CardMaker.Card.Export
                 Color.White);
             CurrentDeck.ResetDeckCache();
             CurrentDeck.CardPrintIndex = nCardIdx++;
+
+            // This loops through the  Sub Layouts and sends them on
+            for (var nSubIdx = 0; nSubIdx < vSubLayoutArray.Count(); nSubIdx++)
+            {
+                var nSubLayoutIdx = vSubLayoutArray[nSubIdx];
+                var SubLayoutExporter = new FileCardExporter(nSubLayoutIdx, nSubLayoutIdx, m_sExportFolder, null, -1, m_eImageFormat);
+                SubLayoutExporter.CurrentDeck.ParentDictionaryColumnNameToIndex = CurrentDeck.Translator.DictionaryColumnNameToIndex;
+                SubLayoutExporter.CurrentDeck.ParentPrintLine = CurrentDeck.CurrentPrintLine;
+                SubLayoutExporter.m_bDoReporting = false;
+                SubLayoutExporter.ExportThread();
+            }
+
+            // We need to clear the image cache if we have a SubLayout
+            if (vSubLayoutArray.Count() > 0)
+            {
+                ImageCache.ClearImageCaches();
+            }
+            
             CardRenderer.DrawPrintLineToGraphics(zGraphics, 0, 0, !CurrentDeck.CardLayout.exportTransparentBackground);
 
-            ProgressReporter.ProgressStep(progressCardIdx);
+            if (m_bDoReporting) ProgressReporter.ProgressStep(progressCardIdx);
 
             string sFileName;
 
@@ -105,16 +127,16 @@ namespace CardMaker.Card.Export
             }
             catch (Exception e)
             {
-                ProgressReporter.AddIssue("Invalid Filename or IO error: {0} {1}".FormatString(sFileName, e.Message));
-                ProgressReporter.ThreadSuccess = false;
-                ProgressReporter.Shutdown();
+                if (m_bDoReporting) ProgressReporter.AddIssue("Invalid Filename or IO error: {0} {1}".FormatString(sFileName, e.Message));
+                if (m_bDoReporting) ProgressReporter.ThreadSuccess = false;
+                if (m_bDoReporting) ProgressReporter.Shutdown();
                 return;
             }
 
-            ProgressReporter.ProgressStep(progressLayoutIdx);
+            if (m_bDoReporting) ProgressReporter.ProgressStep(progressLayoutIdx);
 
-            ProgressReporter.ThreadSuccess = true;
-            ProgressReporter.Shutdown();
+            if (m_bDoReporting) ProgressReporter.ThreadSuccess = true;
+            if (m_bDoReporting) ProgressReporter.Shutdown();
         }
     }
 }
