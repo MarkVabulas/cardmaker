@@ -231,10 +231,17 @@ namespace CardMaker.Card.Translation
 
             if (zTranslationContext.TranslatorBase.DictionaryDefines.TryGetValue(sKey, out sDefineValue))
             {
-            }
-            else if (zTranslationContext.TranslatorBase.DictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
-            {
-                sDefineValue = (nIndex >= zTranslationContext.DeckLine.LineColumns.Count ? string.Empty : (zTranslationContext.DeckLine.LineColumns[nIndex] ?? "").Trim());
+			}
+			else if (zTranslationContext.Deck.ParentDictionaryColumnNameToIndex != null
+					 && zTranslationContext.Deck.ParentDictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
+			{
+				sDefineValue = (nIndex >= zTranslationContext.Deck.ParentPrintLine.LineColumns.Count
+					? string.Empty
+					: (zTranslationContext.Deck.ParentPrintLine.LineColumns[nIndex] ?? "").Trim());
+			}
+			else if (zTranslationContext.TranslatorBase.DictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
+			{
+				sDefineValue = (nIndex >= zTranslationContext.DeckLine.LineColumns.Count ? string.Empty : (zTranslationContext.DeckLine.LineColumns[nIndex] ?? "").Trim());				
             }
             else
             {

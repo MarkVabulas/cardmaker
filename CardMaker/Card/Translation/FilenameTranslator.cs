@@ -68,7 +68,7 @@ namespace CardMaker.Card.Translation
         /// <param name="zLayout"></param>
         /// <returns></returns>
         public static string TranslateFileNameString(string sRawString, int nCardNumber, int nLeftPad, DeckLine zCurrentPrintLine, Dictionary<string, string> dictionaryDefines,
-            Dictionary<string, int> dictionaryColumnNameToIndex, ProjectLayout zLayout)
+            Dictionary<string, int> dictionaryColumnNameToIndex, DeckLine zParentPrintLine, Dictionary<string, int> parentDictionaryColumnNameToIndex, ProjectLayout zLayout)
         {
             string sOutput = sRawString;
             var listLine = zCurrentPrintLine.LineColumns;
@@ -86,8 +86,19 @@ namespace CardMaker.Card.Translation
                 if (dictionaryDefines.TryGetValue(sKey, out sDefineValue))
                 {
                     sOutput = zMatch.Groups[1] + sDefineValue.Trim() + zMatch.Groups[5];
-                }
-                else if (dictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
+				}
+				else if (parentDictionaryColumnNameToIndex != null
+						 && parentDictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
+				{
+					// TODO: maybe check the length of LineColumns
+					sOutput = zMatch.Groups[1] +
+							  (
+								  zParentPrintLine.LineColumns.Count <= nIndex
+									? string.Empty
+									: zParentPrintLine.LineColumns[nIndex].Trim()
+								) + zMatch.Groups[5];
+				}
+				else if (dictionaryColumnNameToIndex.TryGetValue(sKey, out nIndex))
                 {
                     sOutput = zMatch.Groups[1] + listLine[nIndex].Trim() + zMatch.Groups[5];
                 }

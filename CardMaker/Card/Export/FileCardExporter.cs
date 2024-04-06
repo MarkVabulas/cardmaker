@@ -81,7 +81,7 @@ namespace CardMaker.Card.Export
                 if (zElement.type == ElementType.SubLayout.ToString())
                 {
                     // Get the translated string from the current deck
-                    ElementString zElementString = CurrentDeck.TranslateString(zElement.variable, CurrentDeck.GetFullPrintLine(), zElement, true);
+                    ElementString zElementString = CurrentDeck.TranslateString(zElement.variable, CurrentDeck.CurrentPrintLine, zElement, true);
 
                     // Get the index of the referenced layout
 					var nLayoutIdx = ProjectManager.Instance.GetLayoutIndex(zElementString.String);
@@ -111,8 +111,8 @@ namespace CardMaker.Card.Export
 					// empty reference layouts are not exported
 					if (m_bDoReporting) ProgressReporter.ProgressStep(progressLayoutIdx);
                     continue;
-                }
-                var nCardCountPadSize = CurrentDeck.CardCount.ToString(CultureInfo.InvariantCulture).Length;
+				}
+				var nCardCountPadSize = CurrentDeck.CardCount.ToString(CultureInfo.InvariantCulture).Length;
 				if (m_bDoReporting) ProgressReporter.ProgressReset(progressCardIdx, 0, CurrentDeck.CardCount, 0);
 
                 var exportContainerWidth = CurrentDeck.CardLayout.exportWidth == 0
@@ -146,18 +146,7 @@ namespace CardMaker.Card.Export
                 var arrayCardIndices = GetCardIndicesArray(CurrentDeck);
                 for (var nCardArrayIdx = 0; nCardArrayIdx < arrayCardIndices.Length; nCardArrayIdx++)
 				{
-					for (var nSubIdx = 0; nSubIdx < vSubLayoutArray.Count(); nSubIdx++)
-					{
-						var nSubLayoutIdx = vSubLayoutArray[nSubIdx];
-						var SubLayoutExporter = new FileCardExporter(nSubLayoutIdx, nSubLayoutIdx, m_sExportFolder, null, -1, m_eImageFormat);
-						CurrentDeck.ParentPrintLine = CurrentDeck.GetFullPrintLine();
-                        SubLayoutExporter.m_bDoReporting = false;
-						SubLayoutExporter.ExportThread();
-					}
-                    
-				    ChangeExportLayoutIndex(nIdx);
-					
-                    int nCardId;
+					int nCardId;
                     var nX = 0;
                     var nY = 0;
                     var nCardsExportedInImage = 0;
@@ -167,12 +156,37 @@ namespace CardMaker.Card.Export
                         // NOTE: If this loops to create a multi-card image the cardId needs to be updated
                         nCardId = arrayCardIndices[nCardArrayIdx];
                         CurrentDeck.ResetDeckCache();
-                        // HACK - the printcard index is 0 based but all other uses of nCardId are 1 based (so ++ it!)
-                        CurrentDeck.CardPrintIndex = nCardId++;
-                        nCardsExportedInImage++;
+                        // ANNOYING - the printcard index is 0 based but all other uses of nCardId are 1 based
+                        CurrentDeck.CardPrintIndex = nCardId;
+
+                        // This loops through the  Sub Layouts and sends them on
+						for (var nSubIdx = 0; nSubIdx < vSubLayoutArray.Count(); nSubIdx++)
+						{
+							var nSubLayoutIdx = vSubLayoutArray[nSubIdx];
+							var SubLayoutExporter = new FileCardExporter(nSubLayoutIdx, nSubLayoutIdx, m_sExportFolder, null, -1, m_eImageFormat);
+							SubLayoutExporter.CurrentDeck.ParentDictionaryColumnNameToIndex = CurrentDeck.Translator.DictionaryColumnNameToIndex;
+							SubLayoutExporter.CurrentDeck.ParentPrintLine = CurrentDeck.CurrentPrintLine;
+							SubLayoutExporter.m_bDoReporting = false;
+							SubLayoutExporter.ExportThread();
+						}
+
+                        // This is an extra call to ChangeExportLayoutIndex since it switches what the active layout is during the previous ExecuteThread() for the SubLayout
+                        if (vSubLayoutArray.Count() > 0)
+                        {
+                            ChangeExportLayoutIndex(nIdx);
+
+                            // We also need to reset everything associated with our own deck since it gets messed up in the SubLayout
+                            CurrentDeck.ResetDeckCache();
+                            
+                            // Need to update the CardPrintIndex back to the correct one for this Layout, since it was previously changed in the SubLayout
+                            CurrentDeck.CardPrintIndex = nCardId;
+                        }
+
+						nCardsExportedInImage++;
 #warning TODO: optimize this by only creating the bitmap when necessary                        
                         var bitmapSingleCard = new Bitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
                         var zSingleCardGraphics = Graphics.FromImage(bitmapSingleCard);
+
                         ClearGraphics(zSingleCardGraphics);
                         CardRenderer.DrawPrintLineToGraphics(zSingleCardGraphics, 0, 0, !CurrentDeck.CardLayout.exportTransparentBackground);
                         ProcessRotateExport(bitmapSingleCard, CurrentDeck.CardLayout, false);
@@ -220,21 +234,21 @@ namespace CardMaker.Card.Export
 
                     string sFileName;
 
-                    // NOTE: nCardId at this point is 1 more than the actual index ... how convenient for export file names...
+                    // NOTE: nCardId at this point should be 1 more than the actual index ... how annoying for export file names...
 
                     if (!string.IsNullOrEmpty(m_sOverrideStringFormat))
                     {
                         // check for the super override
-                        sFileName = CurrentDeck.TranslateFileNameString(m_sOverrideStringFormat, nCardId, nCardCountPadSize);
+                        sFileName = CurrentDeck.TranslateFileNameString(m_sOverrideStringFormat, nCardId + 1, nCardCountPadSize);
                     }
                     else if (!string.IsNullOrEmpty(CurrentDeck.CardLayout.exportNameFormat))
                     {
                         // check for the per layout override
-                        sFileName = CurrentDeck.TranslateFileNameString(CurrentDeck.CardLayout.exportNameFormat, nCardId, nCardCountPadSize);
+                        sFileName = CurrentDeck.TranslateFileNameString(CurrentDeck.CardLayout.exportNameFormat, nCardId + 1, nCardCountPadSize);
                     }
                     else // default
                     {
-                        sFileName = CurrentDeck.CardLayout.Name + "_" + (nCardId).ToString(CultureInfo.InvariantCulture).PadLeft(nCardCountPadSize, '0');
+                        sFileName = CurrentDeck.CardLayout.Name + "_" + (nCardId + 1).ToString(CultureInfo.InvariantCulture).PadLeft(nCardCountPadSize, '0');
                     }
                     
                     try

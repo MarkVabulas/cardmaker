@@ -50,7 +50,7 @@ namespace CardMaker.Card
 
         public  ITranslatorFactory TranslatorFactory { get; protected set; }
 
-        public TranslatorBase Translator { protected get; set; }
+        public TranslatorBase Translator { get; set; }
 
         public List<DeckLine> ValidLines { get; }
 
@@ -96,32 +96,7 @@ namespace CardMaker.Card
         public DeckLine CurrentPrintLine => ValidLines[m_nCardPrintIndex];
 
         public DeckLine ParentPrintLine = null;
-
-        public DeckLine GetFullPrintLine()
-        {
-            if (ParentPrintLine == null)
-                return CurrentPrintLine;
-
-			DeckLine Result = CurrentPrintLine;
-
-            /*
-			var keysAndValues = ParentPrintLine.LineColumns.Zip(ParentPrintLine.Reference.Entries, (k, v) => new { Key = k, Value = v });
-            foreach (var kv in keysAndValues)
-            {
-                if (Result.LineColumns.Contains(kv.Key))
-                {
-                    var nColumnIdx = Result.LineColumns.IndexOf(kv.Key);
-                    Result.Reference.Entries[nColumnIdx] = kv.Value;
-                }
-                else
-                {
-                    Result.LineColumns.Add(kv.Key);
-                    Result.Reference.Entries.Add(kv.Value);
-                }
-            }
-            */
-           return Result;
-		}
+        public Dictionary<string, int> ParentDictionaryColumnNameToIndex { get; set; }
 
         public DeckLine CurrentLine => ValidLines[m_nCardIndex];
 
@@ -286,8 +261,10 @@ namespace CardMaker.Card
 
         public string TranslateFileNameString(string sRawString, int nCardNumber, int nLeftPad)
         {
-            return FilenameTranslator.TranslateFileNameString(sRawString, nCardNumber, nLeftPad, GetFullPrintLine(),
+#warning: will need to include additional lookup for parent line/column info so files can be generated
+            return FilenameTranslator.TranslateFileNameString(sRawString, nCardNumber, nLeftPad, CurrentPrintLine,
                 Translator.DictionaryDefines, Translator.DictionaryColumnNameToIndex,
+                ParentPrintLine, ParentDictionaryColumnNameToIndex,
                 CardLayout);
         }
 
