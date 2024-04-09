@@ -53,8 +53,11 @@ namespace CardMaker.Card.Export
 
                 UpdateBufferBitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
                 var zGraphics = Graphics.FromImage(m_zExportCardBuffer);
+                zGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
+                zGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                zGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                for (var nCardIdx = 0; nCardIdx < CurrentDeck.CardCount; nCardIdx++)
+				for (var nCardIdx = 0; nCardIdx < CurrentDeck.CardCount; nCardIdx++)
                 {
                     IssueManager.Instance.FireChangeCardInfoEvent(nIdx, nCardIdx + 1);
                     CurrentDeck.CardPrintIndex = nCardIdx;

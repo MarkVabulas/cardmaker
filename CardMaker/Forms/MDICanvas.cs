@@ -114,6 +114,10 @@ namespace CardMaker.Forms
             InitializeComponent();
             var zBitmap = new Bitmap(32, 32);
             Graphics zGraphics = Graphics.FromImage(zBitmap);
+            zGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
+            zGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            zGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            
             Brush zBlack = new SolidBrush(Color.LightGray);
             Brush zWhite = new SolidBrush(Color.White);
             zGraphics.FillRectangle(zBlack, 0, 0, 16, 16);

@@ -111,6 +111,10 @@ namespace CardMaker.Card.Export
                 UpdateBufferBitmap(exportContainerWidth, exportContainerHeight);
                 // The graphics must be initialized BEFORE the resolution of the bitmap is set (graphics will be the same DPI as the application/card)
                 var zContainerGraphics = Graphics.FromImage(m_zExportCardBuffer);
+                zContainerGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
+                zContainerGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                zContainerGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                
                 var arrayCardIndices = GetCardIndicesArray(CurrentDeck);
                 for(var nCardArrayIdx = 0; nCardArrayIdx < arrayCardIndices.Length; nCardArrayIdx++)
                 {
@@ -139,6 +143,10 @@ namespace CardMaker.Card.Export
 #warning TODO: optimize this by only creating the bitmap when necessary                        
                         var bitmapSingleCard = new Bitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
                         var zSingleCardGraphics = Graphics.FromImage(bitmapSingleCard);
+                        zSingleCardGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
+                        zSingleCardGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                        zSingleCardGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
                         ClearGraphics(zSingleCardGraphics);
                         var bExportCard = CardRenderer.DrawPrintLineToGraphics(zSingleCardGraphics, 0, 0, !CurrentDeck.CardLayout.exportTransparentBackground);
                         if (bExportCard)
