@@ -655,7 +655,7 @@ namespace CardMaker.Forms
 
                     LayoutManager.InitializeElementCache(zLayout);
                 }
-                tnRoot.ExpandAll();
+                tnRoot.Expand();
             }
             m_tnCurrentLayout = null;
         }
@@ -677,7 +677,6 @@ namespace CardMaker.Forms
                     // no need to update the layout
                     AddReferenceNode(tnLayout, zReference, null);
                 }
-                tnLayout.Expand();
             }
         }
 
