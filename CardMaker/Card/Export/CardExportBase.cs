@@ -129,29 +129,6 @@ namespace CardMaker.Card.Export
         /// </summary>
         public abstract void ExportThread();
 
-        protected List<int> GetSubLayouts()
-        {
-            var listSubLayouts = new List<int>();
-
-            var nIdx = 0;
-            var dictionaryLayoutNameToLayout =
-                ProjectManager.Instance.LoadedProject.Layout.ToDictionary(layout => layout.Name.ToUpper(), layout => nIdx++);
-            foreach(var zElement in CurrentDeck.CardLayout.Element.Where(e => e.type == ElementType.SubLayout.ToString()))
-            {
-                if (dictionaryLayoutNameToLayout.TryGetValue(zElement.variable.ToUpper(), out var nLayoutIdx))
-                {
-                    listSubLayouts.Add(nLayoutIdx);
-                }
-                else
-                {
-                    ProgressReporter.AddIssue(
-                        $"Invalid layout specified {zElement.variable} in element {zElement.name}");
-                }
-            }
-
-            return listSubLayouts;
-        }
-
         public void Save(Bitmap zBmp, string sPath, FileCardExporterFactory.CardMakerExportImageFormat eImageFormat, int nTargetDPI)
         {
             switch (eImageFormat)
@@ -191,6 +168,24 @@ namespace CardMaker.Card.Export
                     zBmp.Save(sPath, eExportImageFormat);
                     zBmp.SetResolution(nOriginalHorizontalResolution, nOriginalVerticalResolution);
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Gets the array of indices to export
+        /// </summary>
+        /// <param name="zDeck">The deck to use if no indices are specified</param>
+        /// <param name="arrayExportCardIndices">The array of desired indices</param>
+        /// <returns>Array of card indices to export (validated)</returns>
+        protected int[] GetCardIndicesArray(Deck zDeck, int[] arrayExportCardIndices)
+        {
+            if (arrayExportCardIndices != null)
+            {
+                return arrayExportCardIndices.Where(i => i < zDeck.CardCount && i >= 0).ToArray();
+            }
+            else
+            {
+                return Enumerable.Range(0, zDeck.CardCount).ToArray();
             }
         }
     }

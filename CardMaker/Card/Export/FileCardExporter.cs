@@ -106,16 +106,12 @@ namespace CardMaker.Card.Export
                     (currentCardWidth, currentCardHeight) = (currentCardHeight, currentCardWidth);
                 }
 
-                var listSubLayouts = GetSubLayouts();
+                var listSubLayoutContexts = SubLayoutExportContext.CreateSubLayoutContexts(CurrentDeck, ProgressReporter);
 
                 UpdateBufferBitmap(exportContainerWidth, exportContainerHeight);
                 // The graphics must be initialized BEFORE the resolution of the bitmap is set (graphics will be the same DPI as the application/card)
                 var zContainerGraphics = Graphics.FromImage(m_zExportCardBuffer);
-                zContainerGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
-                zContainerGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                zContainerGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                
-                var arrayCardIndices = GetCardIndicesArray(CurrentDeck);
+                var arrayCardIndices = GetCardIndicesArray(CurrentDeck, ExportCardIndices);
                 for(var nCardArrayIdx = 0; nCardArrayIdx < arrayCardIndices.Length; nCardArrayIdx++)
                 {
                     int nCardId;
@@ -132,9 +128,10 @@ namespace CardMaker.Card.Export
                         CurrentDeck.CardPrintIndex = nCardId++;
 
                         // loop through SubLayouts and export them
-                        foreach (var nSubIdx in listSubLayouts)
+                        foreach (var zSubLayoutContext in listSubLayoutContexts)
                         {
-                            var zSubLayoutExporter = new FileCardExporter(nSubIdx, nSubIdx, m_sExportFolder, null, -1, m_eImageFormat);
+                            var zSubLayoutExporter = new FileCardExporter(zSubLayoutContext.LayoutIndex, zSubLayoutContext.LayoutIndex, m_sExportFolder, null, -1, m_eImageFormat);
+                            zSubLayoutExporter.CurrentDeck.ApplySubLayoutDefinesOverrides(zSubLayoutContext.DefineOverrides);
                             zSubLayoutExporter.CurrentDeck.ApplySubLayoutOverrides(CurrentDeck.Defines, CurrentDeck.CurrentPrintLine.ColumnsToValues, CurrentDeck);
                             zSubLayoutExporter.ProgressReporter = new LogOnlyProgressReporter();
                             zSubLayoutExporter.ExportThread();
@@ -143,10 +140,6 @@ namespace CardMaker.Card.Export
 #warning TODO: optimize this by only creating the bitmap when necessary                        
                         var bitmapSingleCard = new Bitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
                         var zSingleCardGraphics = Graphics.FromImage(bitmapSingleCard);
-                        zSingleCardGraphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.GammaCorrected;
-                        zSingleCardGraphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                        zSingleCardGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
                         ClearGraphics(zSingleCardGraphics);
                         var bExportCard = CardRenderer.DrawPrintLineToGraphics(zSingleCardGraphics, 0, 0, !CurrentDeck.CardLayout.exportTransparentBackground);
                         if (bExportCard)
@@ -241,23 +234,6 @@ namespace CardMaker.Card.Export
 
             ProgressReporter.ThreadSuccess = true;
             ProgressReporter.Shutdown();
-        }
-
-        /// <summary>
-        /// Gets the array of indices to export
-        /// </summary>
-        /// <param name="zDeck">The deck to use if no indices are specified</param>
-        /// <returns>Array of card indices to export</returns>
-        private int[] GetCardIndicesArray(Deck zDeck)
-        {
-            if (ExportCardIndices != null)
-            {
-                return ExportCardIndices.Where(i => i < zDeck.CardCount && i >= 0).ToArray();
-            }
-            else
-            {
-                return Enumerable.Range(0, zDeck.CardCount).ToArray();
-            }
         }
 
         /// <summary>
