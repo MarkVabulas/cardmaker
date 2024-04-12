@@ -34,6 +34,7 @@ using PdfSharp;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using Support.IO;
+using Support.Progress;
 using Support.UI;
 
 namespace CardMaker.Card.Export.Pdf
@@ -177,11 +178,11 @@ namespace CardMaker.Card.Export.Pdf
                 var fOriginalXDpi = zBuffer.HorizontalResolution;
                 var fOriginalYDpi = zBuffer.VerticalResolution;
 #endif
-
                 foreach (var nCardIdx in GetExportIndices(ExportCardIndices))
                 {
                     CurrentDeck.CardPrintIndex = nCardIdx;
 
+                    ProcessSubLayoutExports(Path.GetDirectoryName(m_sExportFile));
 #if MONO_BUILD
                     // mono build won't support the optimization so re-create the buffer
                     Bitmap zBuffer = createExportBuffer(CurrentDeck.CardLayout, rectCrop);

@@ -61,12 +61,16 @@ namespace CardMaker.Card.Export
 
             m_nSkipStitchIndex = nSkipStitchIndex;
             m_eImageFormat = eImageFormat;
+            CurrentDeck.ExportContext = new ExportContext(m_eImageFormat);
         }
 
         public override void ExportThread()
         {
             var progressLayoutIdx = ProgressReporter.GetProgressIndex(ProgressName.LAYOUT);
             var progressCardIdx = ProgressReporter.GetProgressIndex(ProgressName.CARD);
+
+#warning this other exporters will need this
+            CurrentDeck.SubLayoutExportContext = SubLayoutExportContext;
 
             // Exports may put multiple cards into a single exported image (referred to as a container below)
 
@@ -106,8 +110,6 @@ namespace CardMaker.Card.Export
                     (currentCardWidth, currentCardHeight) = (currentCardHeight, currentCardWidth);
                 }
 
-                var listSubLayoutContexts = SubLayoutExportContext.CreateSubLayoutContexts(CurrentDeck, ProgressReporter);
-
                 UpdateBufferBitmap(exportContainerWidth, exportContainerHeight);
                 // The graphics must be initialized BEFORE the resolution of the bitmap is set (graphics will be the same DPI as the application/card)
                 var zContainerGraphics = Graphics.FromImage(m_zExportCardBuffer);
@@ -127,18 +129,10 @@ namespace CardMaker.Card.Export
                         // HACK - the printcard index is 0 based but all other uses of nCardId are 1 based (so ++ it!)
                         CurrentDeck.CardPrintIndex = nCardId++;
 
-                        // loop through SubLayouts and export them
-                        foreach (var zSubLayoutContext in listSubLayoutContexts)
-                        {
-                            var zSubLayoutExporter = new FileCardExporter(zSubLayoutContext.LayoutIndex, zSubLayoutContext.LayoutIndex, m_sExportFolder, null, -1, m_eImageFormat);
-                            zSubLayoutExporter.CurrentDeck.ApplySubLayoutDefinesOverrides(zSubLayoutContext.DefineOverrides);
-                            zSubLayoutExporter.CurrentDeck.ApplySubLayoutOverrides(CurrentDeck.Defines, CurrentDeck.CurrentPrintLine.ColumnsToValues, CurrentDeck);
-                            zSubLayoutExporter.ProgressReporter = new LogOnlyProgressReporter();
-                            zSubLayoutExporter.ExportThread();
-                        }
+                        ProcessSubLayoutExports(m_sExportFolder);
 
 #warning TODO: optimize this by only creating the bitmap when necessary                        
-                        var bitmapSingleCard = new Bitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
+                                                var bitmapSingleCard = new Bitmap(CurrentDeck.CardLayout.width, CurrentDeck.CardLayout.height);
                         var zSingleCardGraphics = Graphics.FromImage(bitmapSingleCard);
                         ClearGraphics(zSingleCardGraphics);
                         var bExportCard = CardRenderer.DrawPrintLineToGraphics(zSingleCardGraphics, 0, 0, !CurrentDeck.CardLayout.exportTransparentBackground);

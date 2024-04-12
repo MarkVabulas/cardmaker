@@ -1119,6 +1119,18 @@ namespace CardMaker.Forms
                 return;
             }
             m_eMouseMode = eDestinationMode;
+            switch (m_eMouseMode)
+            {
+                case MouseMode.Move:
+                    TriggerMouseMoveAtMouseLocation();
+                    break;
+                case MouseMode.MoveResize:
+                    TriggerMouseMoveAtMouseLocation();
+                    break;
+                case MouseMode.Rotate:
+                    Cursor = new Cursor(Properties.Resources.RotateCursor.Handle);
+                    break;
+            }
             UpdateFormText();
         }
 
@@ -1129,15 +1141,12 @@ namespace CardMaker.Forms
             {
                 case MouseMode.Move:
                     zBuilder.Append("Canvas [Mode: Move-only]");
-                    TriggerMouseMoveAtMouseLocation();
                     break;
                 case MouseMode.MoveResize:
                     zBuilder.Append("Canvas [Mode: Normal]");
-                    TriggerMouseMoveAtMouseLocation();
                     break;
                 case MouseMode.Rotate:
                     zBuilder.Append("Canvas [Mode: Rotate-only]");
-                    Cursor = new Cursor(Properties.Resources.RotateCursor.Handle);
                     break;
             }
 

@@ -22,8 +22,6 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -44,7 +42,8 @@ namespace CardMaker.Card.Export
         protected Bitmap m_zExportCardBuffer;
         protected int[] ExportLayoutIndices { get; private set; }
         protected CardRenderer CardRenderer { get; }
-        
+        protected SubLayoutExportContext SubLayoutExportContext { get; set; }
+
         public IProgressReporter ProgressReporter { get; set; }
 
         protected CardExportBase(int nLayoutStartIndex, int nLayoutEndIndex) : this(Enumerable.Range(nLayoutStartIndex, nLayoutEndIndex - nLayoutStartIndex).ToArray())
@@ -131,6 +130,19 @@ namespace CardMaker.Card.Export
 
         public void Save(Bitmap zBmp, string sPath, FileCardExporterFactory.CardMakerExportImageFormat eImageFormat, int nTargetDPI)
         {
+            if (SubLayoutExportContext?.Settings.WriteMemoryImage ?? false)
+            {
+                var zMemoryBitmap = new Bitmap(zBmp.Width, zBmp.Height);
+                Graphics.FromImage(zMemoryBitmap).DrawImageUnscaled(zBmp, Point.Empty);
+                zMemoryBitmap.SetResolution(nTargetDPI, nTargetDPI);
+                ImageCache.AddInMemoryImageToCache(sPath, zMemoryBitmap);
+            }
+
+            if (!(SubLayoutExportContext?.Settings.WriteFile ?? true))
+            {
+                return;
+            }
+
             switch (eImageFormat)
             {
                 // Note: SkiaSharp does not support DPI on Webp files (!)
@@ -152,7 +164,6 @@ namespace CardMaker.Card.Export
                     break;
 #endif
                 default:
-                    
                     var nOriginalHorizontalResolution = zBmp.HorizontalResolution;
                     var nOriginalVerticalResolution = zBmp.VerticalResolution;
                     var eExportImageFormat =
@@ -187,6 +198,44 @@ namespace CardMaker.Card.Export
             {
                 return Enumerable.Range(0, zDeck.CardCount).ToArray();
             }
+        }
+
+        protected void ProcessSubLayoutExports(string sExportFolder)
+        {
+            // loop through SubLayouts and export them (based on current index)
+            foreach (var zSubLayoutExportDefinition in SubLayoutExportDefinition.CreateSubLayoutExportDefinitions(CurrentDeck, ProgressReporter))
+            {
+                if (!CreateUpdatedSubLayoutExportContext(zSubLayoutExportDefinition, out var zNewSubLayoutExportContext))
+                {
+                    ProgressReporter.AddIssue(
+                        $"SubLayout export cycle detected with layout {CurrentDeck.CardLayout.Name} -> {zSubLayoutExportDefinition.LayoutName}");
+                    continue;
+                }
+                // all sublayout processing occurs via a FileCardExporter
+                var zSubLayoutExporter = new FileCardExporter(zSubLayoutExportDefinition.LayoutIndex,
+                    zSubLayoutExportDefinition.LayoutIndex, sExportFolder, null, -1, zSubLayoutExportDefinition.Settings.ImageFormat)
+                {
+                    SubLayoutExportContext = zNewSubLayoutExportContext
+                };
+                zSubLayoutExporter.CurrentDeck.ApplySubLayoutDefinesOverrides(zSubLayoutExportDefinition.DefineOverrides);
+                zSubLayoutExporter.CurrentDeck.ApplySubLayoutOverrides(CurrentDeck.Defines, CurrentDeck.CurrentPrintLine.ColumnsToValues, CurrentDeck);
+                zSubLayoutExporter.ProgressReporter = new LogOnlyProgressReporter();
+                zSubLayoutExporter.ExportThread();
+            }
+        }
+
+        protected bool CreateUpdatedSubLayoutExportContext(SubLayoutExportDefinition zSubLayoutExportDefinition, out SubLayoutExportContext zSubLayoutExportContext)
+        {
+            zSubLayoutExportContext = new SubLayoutExportContext(
+                SubLayoutExportContext, CurrentDeck.CardLayout.Name, zSubLayoutExportDefinition.Settings);
+
+            if (zSubLayoutExportContext.LayoutNames.Contains(zSubLayoutExportDefinition.LayoutName))
+            {
+                zSubLayoutExportContext = null;
+                return false;
+            }
+
+            return true;
         }
     }
 }
