@@ -43,7 +43,6 @@ namespace CardMaker.Card.Translation
 
 
         // spreadsheet based overrides
-        public Dictionary<string, int> DictionaryColumnNameToIndex { get; private set; }
         public Dictionary<string, string> DictionaryDefines { get; private set; }
         public List<string> ListColumnNames { get; private set; }
 
@@ -69,10 +68,8 @@ namespace CardMaker.Card.Translation
             return s_setDisallowedReadFields.Contains(sField);
         }
 
-        protected TranslatorBase(Dictionary<string, int> dictionaryColumnNameToIndex, Dictionary<string, string> dictionaryDefines,
-            List<string> listColumnNames)
+        protected TranslatorBase(Dictionary<string, string> dictionaryDefines, List<string> listColumnNames)
         {
-            DictionaryColumnNameToIndex = dictionaryColumnNameToIndex;
             DictionaryDefines = dictionaryDefines;
             ListColumnNames = listColumnNames;
         }
@@ -153,7 +150,9 @@ namespace CardMaker.Card.Translation
                     }
                     else
                     {
-                        Logger.AddLogLine("Unrecognized data-based override: [{0}] for element: [{1}]".FormatString(sKey, zElement.name));
+                        IssueManager.Instance.FireAddIssueEvent(
+                            "Unrecognized data-based override: [{0}] for element: [{1}]".FormatString(sKey,
+                                zElement.name));
                     }
                 }
             }
@@ -181,7 +180,9 @@ namespace CardMaker.Card.Translation
                     }
                     else
                     {
-                        Logger.AddLogLine("Unrecognized definition/variable override: [{0}] for element: [{1}]".FormatString(zKvp.Key, zElement.name));
+                        IssueManager.Instance.FireAddIssueEvent(
+                            "Unrecognized definition/variable override: [{0}] for element: [{1}]".FormatString(zKvp.Key,
+                                zElement.name));
                     }
                 }
             }
