@@ -145,20 +145,22 @@ namespace CardMaker.Card
 
             var zImageAttributes = new ImageAttributes();
             var zColor = new ColorMatrix();
-            if (255 != zElement.opacity)
+            if (255 != zElement.opacity || 255 != colorOverride.A)
             {
-                zColor.Matrix33 = (float) zElement.opacity / 255.0f;
+                zColor.Matrix33 = 
+                    ((float) zElement.opacity / 255.0f) * 
+                    ((float) colorOverride.A / 255.0f);
             }
             // special color handling for certain element types
-            if (colorOverride != Color.Black)
+            if (colorOverride.ToArgb() != Color.Black.ToArgb())
             {
                 switch (zElementType)
                 {
                     case ElementType.FormattedText:
                     case ElementType.Graphic:
-                        zColor.Matrix40 = (float)colorOverride.R / 255.0f;
-                        zColor.Matrix41 = (float)colorOverride.G / 255.0f;
-                        zColor.Matrix42 = (float)colorOverride.B / 255.0f;
+                        zColor.Matrix00 = (float)colorOverride.R / 255.0f;
+                        zColor.Matrix11 = (float)colorOverride.G / 255.0f;
+                        zColor.Matrix22 = (float)colorOverride.B / 255.0f;
                         break;
                 }
             }
