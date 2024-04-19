@@ -67,6 +67,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
     <Reference Include="System.Windows.Forms" />
@@ -124,6 +125,8 @@
     <Compile Include="Card\FormattedText\Markup\AlignRightMarkup.cs" />
     <Compile Include="Card\FormattedText\Markup\BaseAlignMarkup.cs" />
     <Compile Include="Card\FormattedText\Markup\AllCapsMarkup.cs" />
+    <Compile Include="Card\FormattedText\Markup\ColorMatrixMarkup.cs" />
+    <Compile Include="Card\FormattedText\Markup\ColorTypeMarkup.cs" />
     <Compile Include="Card\FormattedText\Markup\FontScaleMarkup.cs" />
     <Compile Include="Card\FormattedText\Markup\ParagraphMarkup.cs" />
     <Compile Include="Card\FormattedText\Markup\ImageColorMarkup.cs" />
@@ -206,6 +209,7 @@
     <Compile Include="Data\ElementPosition.cs" />
     <Compile Include="Data\Enumerations.cs" />
     <Compile Include="Data\LayoutTemplateManager.cs" />
+    <Compile Include="Data\Serialization\ColorMatrixSerializer.cs" />
     <Compile Include="Events\Args\DeckChangeEventArgs.cs" />
     <Compile Include="Events\Args\ElementEventArgs.cs" />
     <Compile Include="Events\Args\ExportEventArgs.cs" />
@@ -324,6 +328,12 @@
     <Compile Include="Support\UI\AbstractDirtyForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Support\UI\ColorMatrixDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Support\UI\ColorMatrixDialog.Designer.cs">
+      <DependentUpon>ColorMatrixDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Support\UI\Extensions.cs" />
     <Compile Include="Support\UI\ListViewAssist.cs" />
     <Compile Include="Support\UI\ListViewDoubleBuffer.cs">
@@ -411,6 +421,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Support\Google\Sheets\GoogleSpreadsheetBrowser.resx">
       <DependentUpon>GoogleSpreadsheetBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support\UI\ColorMatrixDialog.resx">
+      <DependentUpon>ColorMatrixDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Support\UI\RGBColorSelectDialog.resx">
       <DependentUpon>RGBColorSelectDialog.cs</DependentUpon>
